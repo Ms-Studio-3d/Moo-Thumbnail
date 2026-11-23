@@ -1,4 +1,4 @@
-name: Test, build and release portable Windows app
+name: Build lightweight Windows release
 
 on:
   workflow_dispatch:
@@ -11,71 +11,63 @@ on:
 
 permissions:
   contents: read
-
 concurrency:
-  group: portable-${{ github.event.release.tag_name || github.ref_name }}
+  group: native-${{ github.event.release.tag_name || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.release.tag_name || github.ref }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
+      - name: Compile C# and run core and UI tests
+        shell: pwsh
+        run: ./build-native.ps1
 
-      - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
-
-      - name: Check tag matches package version
-        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
+      - name: Read and validate release version
         shell: pwsh
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
+          IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release' }}
         run: |
-          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          if ($env:RELEASE_TAG -ne "v$version") { throw "Release tag must be v$version" }
+          $version = ([version](Get-Item dist-native/Moo-Thumbnail.exe).VersionInfo.FileVersion).ToString(3)
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
+          if ($env:IS_RELEASE -eq 'true' -and $env:RELEASE_TAG -ne "v$version") { throw "Tag must be v$version" }
 
-      - name: Test link parsing, qualities, errors and saving
-        run: npm test
-
-      - name: Test real main, preload, renderer and IPC
-        run: npm run test:smoke
-
-      - name: Build portable EXE
-        run: npm run dist
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-
-      - name: Create checksums
+      - name: Install NSIS build compiler
         shell: pwsh
         run: |
-          $lines = Get-ChildItem dist/*-Portable-*.exe | ForEach-Object {
-            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLower()
-            "$hash  $($_.Name)"
-          }
-          $lines | Set-Content dist/SHA256SUMS.txt -Encoding utf8
+          choco install nsis --yes --no-progress
+          if ($LASTEXITCODE -ne 0) { throw 'Could not install NSIS' }
 
-      - name: Upload portable EXE and checksums
+      - name: Build small installer
+        shell: pwsh
+        run: ./build-installer.ps1
+
+      - name: Prepare portable EXE and checksums
+        shell: pwsh
+        run: |
+          Copy-Item dist-native/Moo-Thumbnail.exe "dist-native/Moo-Thumbnail-$env:APP_VERSION-Portable.exe"
+          $assets = Get-ChildItem dist-native/*-Portable.exe,dist-native/*-Setup.exe
+          $assets | ForEach-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower() + '  ' + $_.Name } | Set-Content dist-native/SHA256SUMS.txt -Encoding utf8
+
+      - name: Upload downloads
         uses: actions/upload-artifact@v7
         with:
-          name: Moo-Thumbnail-Portable-Windows-x64
+          name: Moo-Thumbnail-Windows
           path: |
-            dist/*-Portable-*.exe
-            dist/SHA256SUMS.txt
+            dist-native/*-Portable.exe
+            dist-native/*-Setup.exe
+            dist-native/SHA256SUMS.txt
           if-no-files-found: error
 
-      - name: Publish or update release assets
+      - name: Create or update GitHub release
         if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
         shell: pwsh
         env:
@@ -86,9 +78,9 @@ jobs:
           gh release view $env:RELEASE_TAG 2>$null
           if ($LASTEXITCODE -ne 0) {
             gh release create $env:RELEASE_TAG --verify-tag --title "Moo-Thumbnail $env:RELEASE_TAG" --notes-file RELEASE-NOTES.md
-            if ($LASTEXITCODE -ne 0) { throw 'Could not create release' }
+            if ($LASTEXITCODE -ne 0) { throw 'Release creation failed' }
           }
-          $assets = @(Get-ChildItem dist/*-Portable-*.exe | ForEach-Object FullName)
-          $assets += (Resolve-Path dist/SHA256SUMS.txt).Path
+          $assets = @(Get-ChildItem dist-native/*-Portable.exe,dist-native/*-Setup.exe | ForEach-Object FullName)
+          $assets += (Resolve-Path dist-native/SHA256SUMS.txt).Path
           gh release upload $env:RELEASE_TAG @assets --clobber
-          if ($LASTEXITCODE -ne 0) { throw 'Could not upload release assets' }
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset upload failed' }
