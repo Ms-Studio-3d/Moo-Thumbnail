@@ -2,11 +2,10 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, clipboard, net, nativeImage, session } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
-const { pathToFileURL } = require('node:url');
+const { isTrustedPage } = require('./trusted-page');
 const { lookupThumbnails, ThumbnailError } = require('./thumbnail');
 const { saveImage } = require('./save-image');
 const page = path.join(__dirname, 'index.html');
-const pageUrl = pathToFileURL(page).href;
 let win, current = null, lookupBusy = false, saving = false, lastSaved = null;
 const portableRoot = process.env.PORTABLE_EXECUTABLE_DIR;
 const dataRoot = portableRoot ? path.join(portableRoot, 'Moo-Thumbnail-data')
@@ -40,7 +39,7 @@ function createWindow() {
 function handle(channel, callback) {
   ipcMain.handle(channel, async (event, payload) => {
     try {
-      if (!win || event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame || event.senderFrame.url !== pageUrl) {
+      if (!win || event.sender !== win.webContents || event.senderFrame !== win.webContents.mainFrame || !isTrustedPage(event.senderFrame.url, page)) {
         throw new ThumbnailError('FORBIDDEN', 'طلب غير مسموح.');
       }
       return { ok: true, data: await callback(payload) };

@@ -18,7 +18,8 @@ net.fetch = async url => {
 };
 dialog.showSaveDialog = async () => cancelSave ? { canceled: true } : { canceled: false, filePath: savedPath };
 shell.showItemInFolder = file => { assert.equal(file, savedPath); opened = true; };
-require('../src/main');
+// Optional ASAR path lets the same integration test cover packaged short paths.
+require(path.join(process.env.MOO_TEST_APP_ASAR || path.join(__dirname, '..'), 'src', 'main.js'));
 app.whenReady().then(async () => {
   let originalClipboard;
   try {

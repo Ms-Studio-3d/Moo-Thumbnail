@@ -1,6 +1,6 @@
 {
   "name": "moo-thumbnail",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Moo-Thumbnail - YouTube Thumbnail Downloader",
   "main": "src/main.js",
   "author": "Moo-Thumbnail contributors",

@@ -11,7 +11,7 @@ app.whenReady().then(async () => {
   try {
     const dir = path.join(__dirname, '..', '.test-data', 'live-images');
     await fs.mkdir(dir, { recursive: true });
-    for (const id of ['dQw4w9WgXcQ', 'jNQXAC9IVRw', 'aqz-KE-bpKQ']) {
+    for (const id of ['dQw4w9WgXcQ', 'jNQXAC9IVRw', 'aqz-KE-bpKQ', 'R97EoVD1nr4']) {
       const start = Date.now();
       const { data, images } = await lookupThumbnails(`https://youtu.be/${id}`, {
         fetchImpl: (...args) => net.fetch(...args), getSize: buffer => nativeImage.createFromBuffer(buffer).getSize()
