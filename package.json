@@ -1,0 +1,49 @@
+{
+  "name": "moo-thumbnail",
+  "version": "1.0.0",
+  "description": "Moo-Thumbnail - YouTube Thumbnail Downloader",
+  "main": "src/main.js",
+  "author": "Moo-Thumbnail contributors",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test --test-isolation=none tests/*.test.js",
+    "test:live": "electron tests/live.cjs",
+    "test:smoke": "electron tests/smoke.cjs",
+    "dist": "electron-builder --win portable --x64 --publish never",
+    "dist:folder": "electron-builder --win dir --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "npmRebuild": false,
+    "appId": "com.moo.thumbnail",
+    "productName": "Moo-Thumbnail",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "portable": {
+      "artifactName": "Moo-Thumbnail-${version}-Portable-${arch}.${ext}",
+      "requestExecutionLevel": "user"
+    }
+  },
+  "productName": "Moo-Thumbnail"
+}

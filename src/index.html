@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'">
+  <title>Moo-Thumbnail</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="brand" dir="ltr">
+      <img src="../assets/icon.png" alt="" width="62" height="62">
+      <div><h1><span>Moo-</span>Thumbnail</h1><p>YOUTUBE THUMBNAIL DOWNLOADER</p></div>
+    </div>
+    <div class="edition"><span class="dot"></span><span>نسخة محمولة</span><b id="version">v1.0.0</b></div>
+  </header>
+  <main>
+    <section class="intro"><span class="eyebrow">من الرابط إلى الصورة</span><h2>صورة الفيديو، بأفضل جودة متاحة.</h2><p>ألصق الرابط، اختر الجودة، واحفظ الصورة على جهازك.</p></section>
+    <section class="panel input-panel">
+      <form id="urlForm" novalidate>
+        <label for="urlInput">رابط فيديو YouTube</label>
+        <div class="input-row"><input id="urlInput" type="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" spellcheck="false" aria-describedby="urlHint"><button id="extractBtn" class="primary" type="submit"><span aria-hidden="true">↙</span> استخراج الصور</button></div>
+        <div class="input-meta"><span id="urlHint">يدعم الفيديوهات وShorts وLive وروابط youtu.be</span><span dir="ltr">JPG <i>•</i> 6 QUALITY CHECKS</span></div>
+      </form>
+      <div id="status" class="status" role="status" aria-live="polite">جاهز. أضف رابط الفيديو للبدء.</div>
+    </section>
+    <section id="emptyState" class="empty-state" aria-label="في انتظار رابط فيديو"><div class="frame-icon" aria-hidden="true">▶</div><h3>معاينتك تبدأ هنا</h3><p>ستظهر الصورة والجودات المتاحة بعد فحص الرابط.</p></section>
+    <section id="result" class="result hidden" aria-label="نتائج فحص الصور">
+      <div class="preview-panel panel">
+        <div class="section-head"><div><span class="eyebrow">PREVIEW</span><h3>معاينة الصورة</h3></div><span id="qualityTag" class="tag"></span></div>
+        <div class="preview-wrap"><img id="preview" alt="معاينة الصورة المصغّرة المختارة"></div>
+        <div class="image-meta"><span id="videoId" dir="ltr"></span><span id="imageBytes" dir="ltr"></span></div>
+        <div class="preview-actions"><button id="downloadBtn" class="primary" type="button">↓ حفظ الصورة</button><button id="copyBtn" class="secondary" type="button">نسخ الرابط</button><button id="folderBtn" class="secondary hidden" type="button">فتح المجلد</button></div>
+      </div>
+      <div class="quality-panel panel"><div class="section-head"><div><span class="eyebrow">RESOLUTION</span><h3>اختر الجودة</h3></div><span id="qualityCount" class="count"></span></div><div id="qualityList" class="quality-list" role="radiogroup" aria-label="جودة الصورة"></div><p class="quality-note">الأبعاد فعلية. الجودات غير المتاحة لا يمكن اختيارها.</p></div>
+    </section>
+  </main>
+  <footer><span><b dir="ltr">Moo-Thumbnail</b> · الصور المصغّرة فقط</span><span>بدون تثبيت <i>•</i> بدون حساب</span></footer>
+</div>
+<script src="renderer.js"></script>
+</body>
+</html>
